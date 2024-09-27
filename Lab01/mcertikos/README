@@ -1,0 +1,5 @@
+Compile: make / make all
+Run tests: make clean && make TEST=1
+Run in qemu: make qemu / make qemu-nox
+Debug with gdb: make qemu-gdb / make qemu-nox-gdb
+                (in another terminal) gdb
