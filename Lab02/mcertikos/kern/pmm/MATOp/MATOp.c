@@ -21,9 +21,33 @@
  * 2. Optimize the code using memoization so that you do not have to
  *    scan the allocation table from scratch every time.
  */
+
+static unsigned int next_page_index = VM_USERLO_PI;
+
 unsigned int palloc()
 {
     // TODO
+    unsigned int nps = get_nps();
+    if(nps < VM_USERHI_PI) return 0;
+    
+    if(next_page_index >= VM_USERHI_PI) next_page_index = VM_USERLO_PI;
+    unsigned int beginning_index = next_page_index;
+
+    while(1)
+    {
+        if(at_is_norm(next_page_index) && !at_is_allocated(next_page_index))
+        {
+            at_set_allocated(next_page_index, 1);
+            next_page_index++;
+            return next_page_index - 1;
+        }
+
+        next_page_index++;
+        if(next_page_index >= VM_USERHI_PI) next_page_index = VM_USERLO_PI;
+        if(next_page_index == beginning_index) break;
+    }
+
+
     return 0;
 }
 
@@ -38,4 +62,5 @@ unsigned int palloc()
 void pfree(unsigned int pfree_index)
 {
     // TODO
+    at_set_allocated(pfree_index, 0);
 }
