@@ -22,6 +22,7 @@ void pmem_init(unsigned int mbi_addr)
     unsigned int nps;
 
     // TODO: Define your local variables here.
+    
 
     // Calls the lower layer initialization primitive.
     // The parameter mbi_addr should not be used in the further code.
@@ -35,6 +36,23 @@ void pmem_init(unsigned int mbi_addr)
      */
     // TODO
 
+    unsigned int map_table_size = get_size();
+    unsigned int highest_address = 0;
+
+    for(unsigned int i = 0; i < map_table_size; i++)
+    {
+        unsigned int start_address = get_mms(i);
+        unsigned int range_length = get_mml(i);
+        unsigned int end_address = start_address + range_length;
+        if(end_address > highest_address) highest_address = end_address;
+
+        // Logging the information of the memory map table.
+        // unsigned int available = is_usable(i);
+        // dprintf("[%08x, %08x) => length:%d, available: %d\n", 
+        //     start_address, end_address, range_length, available);
+    }
+
+    nps = highest_address/PAGESIZE;
     set_nps(nps);  // Setting the value computed above to NUM_PAGES.
 
     /**
@@ -61,4 +79,46 @@ void pmem_init(unsigned int mbi_addr)
      *    so in that case, you should consider those pages as unavailable.
      */
     // TODO
+
+    // Setting the permission 1 of the pages reserved by the kernel.
+    for(unsigned int i = 0; i < VM_USERLO_PI; i++)
+    {
+        at_set_perm(i, 1);
+    }
+    for(unsigned int i = VM_USERHI_PI; i < nps; i++)
+    {
+        at_set_perm(i, 1);
+    }
+
+    // Setting permission 0 for the rest of the pages.
+    for(unsigned int i = VM_USERLO_PI; i < VM_USERHI_PI; i++)
+    {
+        at_set_perm(i, 0);
+    }
+
+    // Setting permission 2 for the available pages.
+    for(unsigned int i = 0; i < map_table_size; i++)
+    {
+        unsigned int start_address = get_mms(i);
+        unsigned int range_length = get_mml(i);
+        unsigned int end_address = start_address + range_length;
+        unsigned int available = is_usable(i);
+
+        if(!available) continue;
+
+        unsigned int page_index = start_address/PAGESIZE;
+        while(page_index*PAGESIZE < start_address)
+        {
+            page_index++;
+        }
+
+        while((page_index+1)*PAGESIZE <= end_address)
+        {
+            if(VM_USERLO_PI <= page_index && page_index < VM_USERHI_PI)
+            {
+                at_set_perm(page_index, 2);
+            }
+            page_index++;
+        }
+    }
 }

@@ -96,7 +96,7 @@ QEMUOPTS_BIOS	:= -L $(UTILSDIR)/qemu/
 .PHONY: all boot kern user deps qemu qemu-nox qemu-gdb
 
 all: boot kern user link
-	@./make_image.py
+	@python3 make_image.py
 ifdef TEST
 	@echo "***"
 	@echo "*** Use Ctrl-a x to exit qemu"

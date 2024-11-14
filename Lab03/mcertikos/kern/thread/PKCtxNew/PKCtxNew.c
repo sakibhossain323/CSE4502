@@ -18,5 +18,18 @@ extern char STACK_LOC[NUM_IDS][PAGESIZE] gcc_aligned(PAGESIZE);
 unsigned int kctx_new(void *entry, unsigned int id, unsigned int quota)
 {
     // TODO
-    return 0;
+    
+    // checking if resource available
+    if(!container_can_consume(id, quota))  
+    {
+        return NUM_IDS;
+    }
+    // allocating memory for child thread
+    unsigned int child_id = alloc_mem_quota(id, quota);
+    // setting eip to entry
+    kctx_set_eip(child_id, entry);
+    // setting esp to stack top
+    kctx_set_esp(child_id, STACK_LOC[child_id][PAGESIZE-1]);
+
+    return child_id;
 }
